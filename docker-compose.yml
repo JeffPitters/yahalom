@@ -1,0 +1,83 @@
+version: "3"
+services:
+  server-alice:
+    restart: always
+    image: nginx
+    volumes:
+      - ./server-alice/conf.d:/etc/nginx/conf.d
+      - ./server-alice/nginx.conf:/etc/nginx/nginx.conf
+      - ./app-alice/app/static:/app-alice/static
+    ports:
+      - "5000:80"
+    container_name: server-alice
+    networks:
+      - server_nw
+  
+  web-alice:
+    restart: always
+    build: ./app-alice
+    working_dir: /app-alice
+    volumes:
+      - ./app-alice:/app-alice
+    expose:
+      - "8000"
+    networks:
+      - server_nw
+    container_name: web-alice
+    command: gunicorn alice:app --backlog 10 -b :8000 --timeout 300 --name web-alice
+
+  server-bob:
+    restart: always
+    image: nginx
+    volumes:
+      - ./server-bob/conf.d:/etc/nginx/conf.d
+      - ./server-bob/nginx.conf:/etc/nginx/nginx.conf
+      - ./app-bob/app/static:/app-bob/static
+    ports:
+      - "5001:80"
+    container_name: server-bob
+    networks:
+      - server_nw
+
+  web-bob:
+    restart: always
+    build: ./app-bob
+    working_dir: /app-bob
+    volumes:
+      - ./app-bob:/app-bob
+    expose:
+      - "8000"
+    container_name: web-bob
+    networks:
+      - server_nw
+    command: gunicorn bob:app --backlog 10 -b :8000 --timeout 300 --name web-bob
+
+  server-trent:
+    restart: always
+    image: nginx
+    volumes:
+      - ./server-trent/conf.d:/etc/nginx/conf.d
+      - ./server-trent/nginx.conf:/etc/nginx/nginx.conf
+      - ./app-trent/app/static:/app-trent/static
+    ports:
+      - "5002:80"
+    container_name: server-trent
+    networks:
+      - server_nw
+
+  web-trent:
+    restart: always
+    build: ./app-trent
+    working_dir: /app-trent
+    volumes:
+      - ./app-trent:/app-trent
+    expose:
+      - "8000"
+    container_name: web-trent
+    networks:
+      - server_nw
+    command: gunicorn trent:app --backlog 10 -b :8000 --timeout 300 --name web-trent
+
+networks:
+  server_nw:
+    driver: bridge
